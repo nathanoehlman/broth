@@ -1,0 +1,2 @@
+#!/usr/bin/env node
+process.stdin.pipe(require('../')(process.argv[2])).pipe(process.stdout);

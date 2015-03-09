@@ -1,0 +1,23 @@
+{
+  "name": "broth",
+  "version": "1.0.0",
+  "description": "Super simple browser testing influenced by testling and smokestack",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DamonOehlman/broth.git"
+  },
+  "keywords": [
+    "testing",
+    "browser"
+  ],
+  "author": "Damon Oehlman <damon.oehlman@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DamonOehlman/broth/issues"
+  },
+  "homepage": "https://github.com/DamonOehlman/broth"
+}

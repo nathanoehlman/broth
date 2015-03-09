@@ -2,6 +2,7 @@
   var __consoleLog = console.log;
   var sock;
   var queue = [];
+  var output = document.getElementById('output');
 
   function sendMessage(data) {
     if (! sock) {
@@ -27,5 +28,9 @@
     }
   }
 
-  console.log = sendMessage;
+  console.log = function(data) {
+    sendMessage(data);
+    output.appendChild(document.createTextNode(data + '\n'));
+    window.scroll(0, document.body.clientHeight);
+  };
 }());

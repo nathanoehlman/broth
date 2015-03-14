@@ -96,7 +96,7 @@ module.exports = function(launcher) {
 
   function launch() {
     // spawn the browser
-    browser = spawn(launcher, [
+    browser = spawn(launcher || 'x-www-browser', [
       'http://localhost:' + server.address().port + '/__broth/'
     ]);
   }

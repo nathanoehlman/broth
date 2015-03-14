@@ -116,12 +116,21 @@ module.exports = function(launcher) {
 
   // start bouncy
   server = bouncy(function(req, res, bounce) {
+    var opts = {
+      headers: {
+        'Connection': 'close'
+      }
+    };
+
     if (req.url.slice(0, 8) === '/__broth') {
-      return bounce(assetServer.address().port);
+      return bounce(assetServer.address().port, opts);
     }
     else if (testServer) {
-      bounce(testServer.address().port);
+      return bounce(testServer.address().port, opts);
     }
+
+    res.writeHead(404);
+    res.end('not found');
   });
 
   server.listen(0);

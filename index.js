@@ -8,6 +8,7 @@ var st = require('st');
 var WebSocketServer = require('ws').Server;
 var tap = require('tap-finished');
 var spawn = require('child_process').spawn;
+var out = require('out');
 
 /**
   # broth
@@ -99,6 +100,11 @@ module.exports = function(launcher) {
     browser = spawn(launcher || 'x-www-browser', [
       'http://localhost:' + server.address().port + '/__broth/'
     ], { stdio: 'inherit' });
+    
+    browser.on('close', function(code) {
+      out('browser process exited with errorcode: ' + code);
+      process.exit(code);
+    });
   }
 
   // gobble the incoming stream into a buffer list for the script

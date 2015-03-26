@@ -99,7 +99,7 @@ module.exports = function(launcher) {
     // spawn the browser
     browser = spawn(launcher || 'x-www-browser', [
       'http://localhost:' + server.address().port + '/__broth/'
-    ], { stdio: 'inherit' });
+    ], { stdio: ['pipe', process.stderr, process.stderr] });
     
     browser.on('close', function(code) {
       out('browser process exited with errorcode: ' + code);

@@ -98,7 +98,7 @@ module.exports = function(launcher) {
     // spawn the browser
     browser = spawn(launcher || 'x-www-browser', [
       'http://localhost:' + server.address().port + '/__broth/'
-    ]);
+    ], { stdio: 'inherit' });
   }
 
   // gobble the incoming stream into a buffer list for the script

@@ -1,6 +1,6 @@
 {
   "name": "broth",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Super simple browser testing influenced by testling and smokestack",
   "main": "index.js",
   "bin": {

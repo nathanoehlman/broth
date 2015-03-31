@@ -1,7 +1,7 @@
 var path = require('path');
 var fs = require('fs');
 var through = require('through2');
-var bouncy = require('bouncy');
+var proxy = require('http-proxy');
 var BufferList = require('bl');
 var http = require('http');
 var st = require('st');
@@ -52,9 +52,11 @@ var out = require('out');
 
 module.exports = function(launcher) {
   var browser;
+  var pendingServers = 1;
   var script = new BufferList();
   var stream = through(write, launch);
   var assetServer = http.createServer(handleRequest);
+  var proxies = [];
   var monitor = tap(function(results) {
     process.exit(results.errors.length);
   });
@@ -75,11 +77,25 @@ module.exports = function(launcher) {
 
   function abortOnError(err) {
     if (! err) {
+      pendingServers -= 1;
+      if (pendingServers <= 0) {
+        proxies = [assetServer, testServer].map(createProxy);
+      }
+      
       return;
     }
 
     out.error(err);
     return process.exit(1);
+  }
+  
+  function createProxy(target) {
+    return target && proxy.createProxyServer({
+      target: {
+        host: 'localhost',
+        port: target.address().port
+      }
+    });
   }
 
   function handleRequest(req, res) {
@@ -106,14 +122,29 @@ module.exports = function(launcher) {
       process.exit(code);
     });
   }
+  
+  function proxyRequest(type) {
+    return function(req, res) {
+      if (req.url.slice(0, 8) === '/__broth') {
+        return proxies[0][type].apply(proxies[0], arguments);
+      }
+      else if (proxies[1]) {
+        return proxies[1][type].apply(proxies[1], arguments);
+      }
+
+      res.writeHead(404);
+      res.end('not found');
+    };
+  }
 
   // gobble the incoming stream into a buffer list for the script
   function write(chunk, encoding, callback) {
     script.append(chunk);
     callback();
   }
-
+  
   if (fs.existsSync(testServerPath)) {
+    pendingServers += 1;
     testServer = require(testServerPath)();
     testServer.listen(0, abortOnError);
   }
@@ -121,24 +152,9 @@ module.exports = function(launcher) {
   assetServer.listen(0, abortOnError);
 
   // start bouncy
-  server = bouncy(function(req, res, bounce) {
-    var opts = {
-      headers: {
-        'Connection': 'close'
-      }
-    };
-
-    if (req.url.slice(0, 8) === '/__broth') {
-      return bounce(assetServer.address().port, opts);
-    }
-    else if (testServer) {
-      return bounce(testServer.address().port, opts);
-    }
-
-    res.writeHead(404);
-    res.end('not found');
-  });
-
+  server = http.createServer(proxyRequest('web'));
+  server.on('upgrade', proxyRequest('ws'));
+  
   server.listen(0);
 
   collector.on('connection', function(ws) {

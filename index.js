@@ -52,19 +52,16 @@ var out = require('out');
 
 module.exports = function(launcher) {
   var browser;
+  var proxyPort;
   var pendingServers = 1;
   var script = new BufferList();
   var stream = through(write, launch);
-  var assetServer = http.createServer(handleRequest);
+  var testServerPath = path.resolve('test/server.js');
   var proxies = [];
   var monitor = tap(function(results) {
     process.exit(results.errors.length);
   });
 
-  var collector = new WebSocketServer({
-    server: assetServer,
-    path:  '/__broth/socket'
-  });
 
   var mount = st({
     index: 'index.html',
@@ -72,7 +69,9 @@ module.exports = function(launcher) {
     url: '/__broth',
     passthrough: true
   });
-  var testServerPath = path.resolve('test/server.js');
+
+  var collector;
+  var assetServer;
   var testServer;
 
   function abortOnError(err) {
@@ -81,21 +80,60 @@ module.exports = function(launcher) {
       if (pendingServers <= 0) {
         proxies = [assetServer, testServer].map(createProxy);
       }
-      
+
       return;
     }
 
     out.error(err);
     return process.exit(1);
   }
-  
+
   function createProxy(target) {
-    return target && proxy.createProxyServer({
+    var server = target && proxy.createProxyServer({
       target: {
         host: 'localhost',
         port: target.address().port
       }
     });
+
+    server.on('error', createServers);
+    return server;
+  }
+
+  function createServers() {
+    // initialise the number of pending servers
+    pendingServers = 1;
+
+    proxies.forEach(function(proxy) {
+      proxy.close();
+    })
+
+    // create the asset server
+    assetServer = http.createServer(handleRequest);
+
+    // create the collector
+    collector = new WebSocketServer({
+      server: assetServer,
+      path:  '/__broth/socket'
+    });
+
+    collector.on('connection', function(ws) {
+      ws.on('message', function(message) {
+        stream.push(message + '\n');
+        monitor.write(message + '\n');
+      });
+    });
+
+    assetServer.once('error', createServers);
+    assetServer.listen(0, abortOnError);
+
+    // create the test server
+    if (fs.existsSync(testServerPath)) {
+      pendingServers += 1;
+      testServer = require(testServerPath)();
+      testServer.once('error', createServers);
+      testServer.listen(0, abortOnError);
+    }
   }
 
   function handleRequest(req, res) {
@@ -116,13 +154,13 @@ module.exports = function(launcher) {
     browser = spawn(launcher || 'x-www-browser', [
       'http://localhost:' + server.address().port + '/__broth/'
     ], { stdio: ['pipe', process.stderr, process.stderr] });
-    
+
     browser.on('close', function(code) {
       out('browser process exited with errorcode: ' + code);
       process.exit(code);
     });
   }
-  
+
   function proxyRequest(type) {
     return function(req, res) {
       if (req.url.slice(0, 8) === '/__broth') {
@@ -137,32 +175,28 @@ module.exports = function(launcher) {
     };
   }
 
+  function startProxy() {
+    server = http.createServer(proxyRequest('web'));
+    server.on('upgrade', proxyRequest('ws'));
+    server.on('error', function(err) {
+      startProxy();
+    })
+
+    server.listen(proxyPort || 0, function(err) {
+      if (! err) {
+        proxyPort = server.address().port;
+      }
+    });
+  }
+
   // gobble the incoming stream into a buffer list for the script
   function write(chunk, encoding, callback) {
     script.append(chunk);
     callback();
   }
-  
-  if (fs.existsSync(testServerPath)) {
-    pendingServers += 1;
-    testServer = require(testServerPath)();
-    testServer.listen(0, abortOnError);
-  }
 
-  assetServer.listen(0, abortOnError);
-
-  // start bouncy
-  server = http.createServer(proxyRequest('web'));
-  server.on('upgrade', proxyRequest('ws'));
-  
-  server.listen(0);
-
-  collector.on('connection', function(ws) {
-    ws.on('message', function(message) {
-      stream.push(message + '\n');
-      monitor.write(message + '\n');
-    });
-  });
+  createServers();
+  startProxy();
 
   return stream;
 };

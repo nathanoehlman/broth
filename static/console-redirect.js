@@ -8,7 +8,7 @@
     if (! sock) {
       sock = new WebSocket(location.origin.replace(/^http/, 'ws') + '/__broth/socket');
       sock.onopen = sendNext;
-      sock.onclose = function() {
+      sock.onclose = sock.onerror = function() {
         sock = null;
       };
     }

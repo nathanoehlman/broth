@@ -96,7 +96,10 @@ module.exports = function(launcher) {
       }
     });
 
-    server.on('error', createServers);
+    if (server) {
+      server.on('error', createServers);
+    }
+    
     return server;
   }
 

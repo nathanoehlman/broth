@@ -26,12 +26,12 @@
   },
   "homepage": "https://github.com/DamonOehlman/broth",
   "dependencies": {
-    "bl": "^0.9.4",
+    "bl": "^1.0.0",
     "http-proxy": "^1.9.0",
-    "out": "^0.5.4",
+    "out": "^1.0.0",
     "st": "^0.5.3",
     "tap-finished": "0.0.1",
-    "through2": "^0.6.3",
+    "through2": "^2.0.0",
     "ws": "^0.8.0"
   }
 }

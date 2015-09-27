@@ -159,8 +159,10 @@ module.exports = function(launcher) {
     ], { stdio: ['pipe', process.stderr, process.stderr] });
 
     browser.on('close', function(code) {
-      out('browser process exited with errorcode: ' + code);
-      process.exit(code);
+      if (code !== 0) {
+        out('was not able to start browser instance, exited with code: ' + code);
+        process.exit(code);
+      }
     });
   }
 

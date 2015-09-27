@@ -4,6 +4,9 @@ node_js:
   - 0.12
   - stable
 
+addons:
+  firefox: "latest"
+
 notifications:
   email:
     - damon.oehlman@gmail.com

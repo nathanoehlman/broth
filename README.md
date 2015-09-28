@@ -6,7 +6,7 @@ nor [`smokestack`](https://github.com/hushsk/smokestack) meet your needs.
 
 [![NPM](https://nodei.co/npm/broth.png)](https://nodei.co/npm/broth/)
 
-[![experimental](https://img.shields.io/badge/stability-experimental-red.svg)](https://github.com/dominictarr/stability#experimental) 
+[![experimental](https://img.shields.io/badge/stability-experimental-red.svg)](https://github.com/dominictarr/stability#experimental) [![Build Status](https://api.travis-ci.org/DamonOehlman/broth.svg?branch=master)](https://travis-ci.org/DamonOehlman/broth) [![bitHound Score](https://www.bithound.io/github/DamonOehlman/broth/badges/score.svg)](https://www.bithound.io/github/DamonOehlman/broth) 
 
 ## Usage
 

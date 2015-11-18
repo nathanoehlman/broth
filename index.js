@@ -99,7 +99,7 @@ module.exports = function(launcher) {
     if (server) {
       server.on('error', createServers);
     }
-    
+
     return server;
   }
 
@@ -153,17 +153,22 @@ module.exports = function(launcher) {
   }
 
   function launch() {
-    // spawn the browser
-    browser = spawn(launcher || 'x-www-browser', [
-      'http://localhost:' + server.address().port + '/__broth/'
-    ], { stdio: ['pipe', process.stderr, process.stderr] });
 
-    browser.on('close', function(code) {
-      if (code !== 0) {
-        out('was not able to start browser instance, exited with code: ' + code);
-        process.exit(code);
-      }
-    });
+    if (launcher === '-u') {
+      out('http://localhost:' + server.address().port + '/__broth/');
+    } else {
+      // spawn the browser
+      browser = spawn(launcher || 'x-www-browser', [
+        'http://localhost:' + server.address().port + '/__broth/'
+      ], { stdio: ['pipe', process.stderr, process.stderr] });
+
+      browser.on('close', function(code) {
+        if (code !== 0) {
+          out('was not able to start browser instance, exited with code: ' + code);
+          process.exit(code);
+        }
+      });
+    }
   }
 
   function proxyRequest(type) {
